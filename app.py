@@ -1,8 +1,10 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy 
 from flask_marshmallow import Marshmallow
 from flask_cors import CORS
+from flask import jsonify
 import os 
+
 
 app = Flask(__name__)
 
@@ -14,77 +16,77 @@ cors = CORS(app, resources={
 })
 
 basedir = os.path.abspath(os.path.dirname(__file__))
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(basedir, "app.sqlite")
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(basedir, "db.sqlite")
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
 
-class Shop(db.Model):
+class News(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(100), unique=False)
-    price = db.Column(db.Integer, unique=False)
+    message = db.Column(db.String(300), unique=False)
+    
 
-    def __init__(self, title, price, id):
-        self.title = title
-        self.price = price
-        self.price = id
+    def __init__(self, message):
+        self.message = message
 
 
-class ShopSchema(ma.Schema):
+class NewsSchema(ma.Schema):
     class Meta:
-        fields = ("title", "price", "id")
+        fields = ("message", "id")
 
-shop_schema = ShopSchema()
-shops_schema = ShopSchema(many=True)
+news_schema = NewsSchema()
+manynews_schema = NewsSchema(many=True)
 
-# Endpoint to create a new product
-@app.route("/product", methods=["POST"])
-def add_product():
-    title = request.json["title"]
-    price = request.json["price"]
+# Endpoint to create a new message
+@app.route("/message", methods=["POST"])
+def add_message():
+    message = request.json["message"]
 
-    new_product = Shop(title, price)
+    new_message = News(message)
 
-    db.session.add(new_product)
+    db.session.add(new_message)
     db.session.commit()
 
-    product = Shop.query.get(new_product.id)
+    message = News.query.get(new_message.id)
 
-    return shop_schema.jsonify(product)
+    return news_schema.jsonify(message)
 
-# Endpoint to query all products
-@app.route("/products", methods=["GET"])
-def get_products():
-    all_products = Shop.query.all()
-    result = shops_schema.dump(all_products)
+# Endpoint to query all messages
+@app.route("/messages", methods=["GET"])
+def get_messages():
+    all_messages = News.query.all()
+    result = manynews_schema.dump(all_messages)
     return jsonify(result)
 
-# Endpoint for querying a single guide
-@app.route("/product/<id>", methods=["GET"])
-def get_product(id):
-    product = Shop.query.get(id)
-    return shop_schema.jsonify(product)
+    # all_products = Shop.query.all()
+    # result = shops_schema.dump(all_products)
+    # return jsonify(result)
 
-# Endpoint for updating a product
-@app.route("/product/<id>", methods=["PUT"])
-def product_update(id):
-    product = Shop.query.get(id)
-    title = request.json["title"]
-    price = request.json["price"]
+# Endpoint for querying a single message
+@app.route("/message/<id>", methods=["GET"])
+def get_message(id):
+    message = News.query.get(id)
+    return news_schema.jsonify(message)
 
-    product.title = title
-    product.price = price
+# Endpoint for updating a message
+@app.route("/message/<id>", methods=["PUT"])
+def message_update(id):
+    message = News.query.get(id)
+    
+    message = request.json["message"]
+
+    message.message = message
 
     db.session.commit()
-    return shop_schema.jsonify(product)
+    return news_schema.jsonify(message)
 
-# Endpoint for deleting a product
-@app.route("/product/<id>", methods=["DELETE"])
-def product_delete(id):
-    product = Shop.query.get(id)
-    db.session.delete(product)
+# Endpoint for deleting a message
+@app.route("/message/<id>", methods=["DELETE"])
+def message_delete(id):
+    message = News.query.get(id)
+    db.session.delete(message)
     db.session.commit()
 
-    return "Guide was successfully deleted"
+    return "Message was successfully deleted"
 
 if __name__ == "__main__":
     app.run(debug=True)
