@@ -11,7 +11,7 @@ app = Flask(__name__)
 CORS(app)
 cors = CORS(app, resources={
     r"/*": {
-        "origins": "http://localhost:3000"
+        "origins": "https://stormy-ocean-47874.herokuapp.com/"
     }
 })
 
